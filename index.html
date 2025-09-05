@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Chatbot Flask</title>
+<style>
+body { font-family: Arial; background:#f4f4f4; }
+#chat { max-width:400px; margin:50px auto; background:#fff; padding:20px; border-radius:10px; }
+#messages { height:200px; overflow-y:auto; border:1px solid #ccc; padding:10px; margin-bottom:10px; }
+input { width:75%; padding:10px; }
+button { padding:10px; }
+</style>
+</head>
+<body>
+<div id="chat">
+<h3>Chatbot Flask</h3>
+<div id="messages"></div>
+<input type="text" id="userInput" placeholder="Tulis pesan...">
+<button onclick="sendMessage()">Kirim</button>
+</div>
+
+<script>
+let SERVER_URL = "";
+
+async function detectIP() {
+  try {
+    let res = await fetch("/get_ip");
+    let data = await res.json();
+    SERVER_URL = "http://" + data.ip + ":5000/chat";
+    addMessage("Bot siap! Server URL: " + SERVER_URL);
+  } catch (e) {
+    SERVER_URL = "http://127.0.0.1:5000/chat";
+    addMessage("Gagal detect IP, pakai localhost.");
+  }
+}
+
+async function sendMessage() {
+  if (!SERVER_URL) return;
+  let input = document.getElementById("userInput");
+  let msg = input.value.trim();
+  if (!msg) return;
+  addMessage("Kamu: " + msg);
+  input.value = "";
+
+  try {
+    let res = await fetch(SERVER_URL, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({message: msg})
+    });
+    let data = await res.json();
+    addMessage("Bot: " + data.reply);
+  } catch (e) {
+    addMessage("Bot: (Gagal konek ke server Python)");
+  }
+}
+
+function addMessage(text) {
+  let messages = document.getElementById("messages");
+  messages.innerHTML += "<div>" + text + "</div>";
+  messages.scrollTop = messages.scrollHeight;
+}
+
+detectIP();
+</script>
+</body>
+</html>
